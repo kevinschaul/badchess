@@ -1,2 +1,4 @@
 .eggs
+*.egg-info
+__pycache__
 badchess.log

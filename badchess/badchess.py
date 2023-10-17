@@ -123,7 +123,7 @@ def process_position(words, board):
 
 
 def process_go(words, board):
-    move = random.choice([move for move in board.legal_moves])
+    move = find_best_move(board)
     send_command(f"bestmove {move.uci()}")
 
 
@@ -136,6 +136,11 @@ def process_quit(words, board):
     global should_exit
     should_exit = True
     logging.debug(f"exit set")
+
+
+def find_best_move(board):
+    move = random.choice([move for move in board.legal_moves])
+    return move
 
 
 def main():
