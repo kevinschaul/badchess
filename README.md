@@ -8,7 +8,7 @@ Currently just plays a random legal move!
 
 Clone this repo, including git submodules:
 
-    git clone --recurse-submodules https://github.com/chaconinc/MainProject
+    git clone --recurse-submodules https://github.com/kevinschaul/badchess/
 
 Install the python dependencies (I use pyenv, but adapt as you wish):
 
@@ -22,7 +22,7 @@ Install the python dependencies (I use pyenv, but adapt as you wish):
 
 You can play against the engine in `xboard`, a chess GUI. From this repo's directory, start `xboard` with the following arguments:
 
-    xboard -fcp badchess/badchess.py -fd . -fUCI
+    xboard -fcp badchess/main.py -fd . -fUCI
 
 ### As a bot on lichess.org
 
