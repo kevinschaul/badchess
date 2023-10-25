@@ -225,7 +225,7 @@ def _build_move_tree(board: chess.Board, depth=1, _current_depth=1, _move="root"
         if _current_depth == depth:
             tree.add_child(Tree(name=move.uci()))
         else:
-            new_board = board.copy()
+            new_board = board.copy(stack=False)
             new_board.push_uci(move.uci())
 
             tree.add_child(
@@ -248,7 +248,7 @@ def add_strength_to_tree(board: chess.Board, tree: Tree, depth=1):
 
 def _add_strength_to_tree(board: chess.Board, tree: Tree, depth=1, _current_depth=1):
     for move in tree.children:
-        new_board = board.copy()
+        new_board = board.copy(stack=False)
         new_board.push_uci(move.name)
         move.data = {"strength": estimate_strength(new_board)}
 
