@@ -133,7 +133,7 @@ def process_position(words, board):
 
 
 def process_go(words, board):
-    move = find_best_move(board)
+    move = find_best_move(board, depth=3)
     send_command(f"bestmove {move}")
 
 
@@ -148,12 +148,12 @@ def process_quit(words, board):
     logging.debug(f"exit set")
 
 
-def find_best_move(board) -> chess.Move:
+def find_best_move(board, depth=3) -> chess.Move:
     # Build out a move tree
-    move_tree = build_move_tree(board, depth=3)
+    move_tree = build_move_tree(board, depth=depth)
 
     # Add strength estimates to each move
-    add_strength_to_tree(board, move_tree, depth=3)
+    add_strength_to_tree(board, move_tree, depth=depth)
 
     moves_list = minimax(move_tree)
     logging.info(f"moves_list: {moves_list}")
