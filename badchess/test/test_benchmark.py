@@ -24,6 +24,7 @@ def test_find_best_move(benchmark):
     board = chess.Board()
     benchmark(find_best_move, board)
 
+
 def test_find_best_move_morphy(benchmark):
     board = chess.Board(FEN_MORPHY_DEFENCE)
     benchmark(find_best_move, board)

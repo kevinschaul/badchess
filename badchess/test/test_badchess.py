@@ -3,6 +3,7 @@ from badchess.main import (
     build_move_tree,
     estimate_strength,
     add_strength_to_tree,
+    find_best_move,
     minimax,
 )
 
@@ -67,3 +68,10 @@ def test_minimax_morphy_depth_3():
     moves_list = minimax(move_tree)
 
     assert moves_list[0] == "b5c6"
+
+
+def test_find_best_move_depth_3():
+    board = chess.Board(fen=FEN_MORPHY_DEFENCE)
+    best_move = find_best_move(board, depth=3)
+
+    assert best_move == "b5c6"

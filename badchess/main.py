@@ -152,9 +152,6 @@ def find_best_move(board, depth=3) -> chess.Move:
     # Build out a move tree
     move_tree = build_move_tree(board, depth=depth)
 
-    # Add strength estimates to each move
-    add_strength_to_tree(board, move_tree, depth=depth)
-
     moves_list = minimax(move_tree)
     logging.info(f"moves_list: {moves_list}")
     return moves_list[0]
@@ -222,40 +219,29 @@ def _build_move_tree(board: chess.Board, depth=1, _current_depth=1, _move="root"
     tree = Tree(name=_move)
 
     for move in board.legal_moves:
-        if _current_depth == depth:
-            tree.add_child(Tree(name=move.uci()))
-        else:
-            new_board = board.copy(stack=False)
-            new_board.push_uci(move.uci())
+        move_uci = move.uci()
+        new_board = board.copy(stack=False)
+        new_board.push_uci(move_uci)
 
-            tree.add_child(
-                _build_move_tree(
-                    new_board,
-                    depth=depth,
-                    _current_depth=_current_depth + 1,
-                    _move=move.uci(),
-                )
+        if _current_depth == depth:
+            # If we are at max depth, this move node is a leaf
+            move_node = Tree(name=move_uci)
+        else:
+            # Otherwise let's build a subtree with this move
+            move_node = _build_move_tree(
+                new_board.copy(stack=False),
+                depth=depth,
+                _current_depth=_current_depth + 1,
+                _move=move_uci,
             )
+
+        # Calculate the strength for this move
+        move_node.data = {"strength": estimate_strength(new_board)}
+
+        # Add it to the tree
+        tree.add_child(move_node)
 
     return tree
-
-
-def add_strength_to_tree(board: chess.Board, tree: Tree, depth=1):
-    if depth > MAX_DEPTH:
-        raise ValueError(f"Depth > {MAX_DEPTH} is asking for trouble")
-    _add_strength_to_tree(board, tree, depth=depth)
-
-
-def _add_strength_to_tree(board: chess.Board, tree: Tree, depth=1, _current_depth=1):
-    for move in tree.children:
-        new_board = board.copy(stack=False)
-        new_board.push_uci(move.name)
-        move.data = {"strength": estimate_strength(new_board)}
-
-        if _current_depth < depth:
-            _add_strength_to_tree(
-                new_board, move, depth=depth, _current_depth=_current_depth + 1
-            )
 
 
 def estimate_strength(board: chess.Board):
