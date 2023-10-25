@@ -270,8 +270,8 @@ def estimate_strength(board: chess.Board):
         chess.KNIGHT: 3,
         chess.PAWN: 1,
     }
-    white = sum([v * len(board.pieces(k, chess.WHITE)) for k, v in values.items()])
-    black = sum([v * len(board.pieces(k, chess.BLACK)) for k, v in values.items()])
+    white = sum(v * len(board.pieces(k, chess.WHITE)) for k, v in values.items())
+    black = sum(v * len(board.pieces(k, chess.BLACK)) for k, v in values.items())
     return white - black
 
 
