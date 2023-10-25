@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 from concurrent.futures import ThreadPoolExecutor
+import fcntl
 import logging
 from math import inf
+import os
 import random
-import selectors
+import select
 import sys
 import queue
 
@@ -19,6 +21,11 @@ logging.basicConfig(
     format="%(levelname)s %(asctime)s %(message)s",
 )
 
+# Set sys.stdin to non-blocking mode
+fd = sys.stdin.fileno()
+flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
 should_exit = False
 
 MAX_DEPTH = 4
@@ -26,38 +33,41 @@ MAX_DEPTH = 4
 
 def producer(q):
     """
-    Read a line from stdin. Check to see whether we should exit every second.
+    Read a line from stdin, in a non-blocking way -- waiting at most
+    1 second per call. Put any input lines into the queue.
     """
+    lines = readlines_with_timeout(1)
+    for line in lines:
+        q.put(line)
+        logging.debug(f"Producer: {line}")
 
-    def read_input(stdin, mask):
-        line = stdin.readline()
-        if not line:
-            sel.unregister(sys.stdin)
-            return None
-        else:
-            return line.strip()
 
-    sel = selectors.DefaultSelector()
-    sel.register(sys.stdin, selectors.EVENT_READ, read_input)
+def readlines_with_timeout(timeout):
+    """
+    Return an array of lines from stdin, waiting at most `timeout` seconds.
+    Note that stdin has been set to non-blocking mode earlier in this script.
+    """
+    rlist, _, _ = select.select([sys.stdin], [], [], timeout)
 
-    while not should_exit:
-        # logging.debug(f"Producer: {should_exit}")
-        for key, events in sel.select(timeout=1):
-            callback = key.data
-            line = callback(sys.stdin, events)
-            if line:
-                q.put(line)
-                # logging.debug(f"Producer: {line}")
-    logging.debug(f"Producer done")
+    if rlist:
+        # Data is available to read from sys.stdin
+        lines = []
+        while True:
+            line = sys.stdin.readline()
+            if not line:
+                break
+            lines.append(line)
+        return lines
+    else:
+        # Timeout reached
+        return []
 
 
 def consumer(q, board, i):
     while not should_exit:
-        # logging.debug(f"Consumer {i}: {should_exit}")
         try:
             line = q.get(timeout=1)
             if line:
-                # logging.debug(f"Consumer: {line}")
                 process_command(line, board)
         except queue.Empty:
             pass
@@ -145,10 +155,10 @@ def process_quit(words, board):
 
 def find_best_move(board) -> chess.Move:
     # Build out a move tree
-    move_tree = build_move_tree(board, depth=1)
+    move_tree = build_move_tree(board, depth=3)
 
     # Add strength estimates to each move
-    add_strength_to_tree(board, move_tree, depth=1)
+    add_strength_to_tree(board, move_tree, depth=3)
 
     moves_list = minimax(move_tree)
     logging.info(f"moves_list: {moves_list}")
@@ -277,8 +287,14 @@ def main():
     n_consumers = 2
 
     with ThreadPoolExecutor(max_workers=n_consumers + 1) as executor:
-        executor.submit(producer, q)
+        # Set up consumers
         [executor.submit(consumer, q, board, i) for i in range(n_consumers)]
+
+        # Set up producer
+        producerFuture = executor.submit(producer, q)
+        while not should_exit:
+            if producerFuture.done():
+                producerFuture = executor.submit(producer, q)
 
 
 if __name__ == "__main__":
