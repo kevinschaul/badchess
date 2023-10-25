@@ -21,11 +21,6 @@ logging.basicConfig(
     format="%(levelname)s %(asctime)s %(message)s",
 )
 
-# Set sys.stdin to non-blocking mode
-fd = sys.stdin.fileno()
-flags = fcntl.fcntl(fd, fcntl.F_GETFL)
-fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
-
 should_exit = False
 
 MAX_DEPTH = 4
@@ -45,7 +40,7 @@ def producer(q):
 def readlines_with_timeout(timeout):
     """
     Return an array of lines from stdin, waiting at most `timeout` seconds.
-    Note that stdin has been set to non-blocking mode earlier in this script.
+    Note that stdin has been set to non-blocking mode in main().
     """
     rlist, _, _ = select.select([sys.stdin], [], [], timeout)
 
@@ -281,6 +276,11 @@ def estimate_strength(board: chess.Board):
 
 
 def main():
+    # Set sys.stdin to non-blocking mode
+    fd = sys.stdin.fileno()
+    flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
     q = queue.Queue()
     board = chess.Board()
 
