@@ -208,6 +208,9 @@ def minimax(move_tree: Tree, is_cur_move_white: bool):
         else:
             best_moves = get_tree_min(cur_tree)
 
+        logging.info(
+            f"best_moves (d: {cur_depth}, s: {best_moves[0]}) {[cur_tree.children[m].name for m in best_moves[1]]}"
+        )
         move = random.choice(best_moves[1])
         cur_tree = cur_tree.children[move]
         moves_list.append(cur_tree.name)
