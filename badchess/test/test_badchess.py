@@ -2,10 +2,12 @@ import chess
 from badchess.main import (
     build_move_tree,
     estimate_strength,
-    add_strength_to_tree,
     find_best_move,
+    get_tree_max,
+    get_tree_min,
     minimax,
 )
+from badchess.tree import Tree
 
 FEN_MORPHY_DEFENCE = (
     "r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4"
@@ -46,32 +48,122 @@ def test_build_move_tree_initial_depth_4():
     assert depth == 4
 
 
-def test_add_strength_to_tree_morphy_depth_1():
-    board = chess.Board(fen=FEN_MORPHY_DEFENCE)
-    move_tree = build_move_tree(board, depth=1)
-    add_strength_to_tree(board, move_tree, depth=1)
+def test_get_tree_max_basic_1():
+    move_tree = Tree(
+        "root",
+        children=(
+            Tree("c8d7", data={"strength": 0}),
+            Tree("c8e5", data={"strength": 0}),
+            Tree("c8h3", data={"strength": 3}),
+        ),
+    )
+    assert get_tree_max(move_tree) == (3, [2])
 
-    assert "strength" in move_tree.children[0].data
 
-    # for move in move_tree.children:
-    #     print(move.name, move.data)
+def test_get_tree_max_basic_2():
+    move_tree = Tree(
+        "root",
+        children=(
+            Tree("c8d7", data={"strength": 3}),
+            Tree("c8e5", data={"strength": 0}),
+            Tree("c8h3", data={"strength": 0}),
+        ),
+    )
+    assert get_tree_max(move_tree) == (3, [0])
 
-    b5c6 = move_tree.get_child("b5c6")
-    assert b5c6
-    assert b5c6.data["strength"] == 3
+
+def test_get_tree_max_ties_last():
+    move_tree = Tree(
+        "root",
+        children=(
+            Tree("c8d7", data={"strength": 0}),
+            Tree("c8e5", data={"strength": 3}),
+            Tree("c8h3", data={"strength": 3}),
+        ),
+    )
+    assert get_tree_max(move_tree) == (3, [1, 2])
+
+
+def test_get_tree_max_ties_first():
+    move_tree = Tree(
+        "root",
+        children=(
+            Tree("c8d7", data={"strength": 3}),
+            Tree("c8e5", data={"strength": 3}),
+            Tree("c8h3", data={"strength": 0}),
+        ),
+    )
+    assert get_tree_max(move_tree) == (3, [0, 1])
+
+
+def test_get_tree_min_basic_1():
+    move_tree = Tree(
+        "root",
+        children=(
+            Tree("c8d7", data={"strength": 0}),
+            Tree("c8e5", data={"strength": 3}),
+            Tree("c8h3", data={"strength": 3}),
+        ),
+    )
+    assert get_tree_min(move_tree) == (0, [0])
+
+
+def test_get_tree_min_basic_2():
+    move_tree = Tree(
+        "root",
+        children=(
+            Tree("c8d7", data={"strength": 3}),
+            Tree("c8e5", data={"strength": 3}),
+            Tree("c8h3", data={"strength": 0}),
+        ),
+    )
+    assert get_tree_min(move_tree) == (0, [2])
+
+
+def test_get_tree_min_ties_first():
+    move_tree = Tree(
+        "root",
+        children=(
+            Tree("c8d7", data={"strength": 0}),
+            Tree("c8e5", data={"strength": 0}),
+            Tree("c8h3", data={"strength": 3}),
+        ),
+    )
+    assert get_tree_min(move_tree) == (0, [0, 1])
+
+
+def test_get_tree_min_ties_last():
+    move_tree = Tree(
+        "root",
+        children=(
+            Tree("c8d7", data={"strength": 3}),
+            Tree("c8e5", data={"strength": 0}),
+            Tree("c8h3", data={"strength": 0}),
+        ),
+    )
+    assert get_tree_min(move_tree) == (0, [1, 2])
 
 
 def test_minimax_morphy_depth_3():
     board = chess.Board(fen=FEN_MORPHY_DEFENCE)
     move_tree = build_move_tree(board, depth=3)
-    add_strength_to_tree(board, move_tree, depth=3)
-    moves_list = minimax(move_tree)
+    moves_list = minimax(move_tree, True)
 
     assert moves_list[0] == "b5c6"
 
 
-def test_find_best_move_depth_3():
+def test_find_best_move_morphy_depth_3():
     board = chess.Board(fen=FEN_MORPHY_DEFENCE)
     best_move = find_best_move(board, depth=3)
 
     assert best_move == "b5c6"
+
+
+def test_find_best_move_1_depth_3():
+    board = chess.Board(
+        fen="r1b1kb1r/2q2ppp/ppn5/2pPp3/P7/1P3NPB/3P1P1P/RNBQK2R b KQkq - 1 10"
+    )
+
+    best_move = find_best_move(board, depth=3)
+
+    assert best_move == "c8h3"

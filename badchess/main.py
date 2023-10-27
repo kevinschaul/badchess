@@ -152,7 +152,7 @@ def find_best_move(board, depth=3) -> chess.Move:
     # Build out a move tree
     move_tree = build_move_tree(board, depth=depth)
 
-    moves_list = minimax(move_tree)
+    moves_list = minimax(move_tree, board.turn == chess.WHITE)
     logging.info(f"moves_list: {moves_list}")
     return moves_list[0]
 
@@ -162,11 +162,16 @@ def get_tree_max(move_tree: Tree):
     Finds the child node with the maximum strength. Returns a tuple with its
     strength an a list of node indices at that strength.
     """
+    # Find the minimum strength
     max_strength = -inf
-    max_indices = []
     for i, move in enumerate(move_tree.children):
         if move.data["strength"] >= max_strength:
             max_strength = move.data["strength"]
+
+    # Then return all nodes that produce that minimum strength
+    max_indices = []
+    for i, move in enumerate(move_tree.children):
+        if move.data["strength"] == max_strength:
             max_indices.append(i)
     return (max_strength, max_indices)
 
@@ -178,18 +183,22 @@ def get_tree_min(move_tree: Tree):
 
     Finds the child node with the minimum strength, and returns its strength and its index
     """
+    # Find the minimum strength
     min_strength = inf
+    for i, move in enumerate(move_tree.children):
+        if move.data["strength"] <= min_strength:
+            min_strength = move.data["strength"]
+
+    # Then return all nodes that produce that minimum strength
     min_indices = []
     for i, move in enumerate(move_tree.children):
-        if move.data["strength"] < min_strength:
-            min_strength = move.data["strength"]
+        if move.data["strength"] == min_strength:
             min_indices.append(i)
     return (min_strength, min_indices)
 
 
-def minimax(move_tree: Tree):
+def minimax(move_tree: Tree, is_cur_move_white: bool):
     moves_list = []
-    is_cur_move_white = True
     cur_tree = move_tree
     cur_depth = 1
 
