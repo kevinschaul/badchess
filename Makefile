@@ -6,8 +6,13 @@ run-xboard:
 run-lichess:
 	cd lichess-bot && python lichess-bot.py --config ../lichess-bot-config.yml
 
-.PHONY: benchmark
-benchmark:
-	pytest badchess/test/test_benchmark.py \
+.PHONY: benchmark-speed
+benchmark-speed:
+	pytest badchess/benchmark/speed \
 		--benchmark-min-rounds=20 \
 		--benchmark-autosave
+
+.PHONY: benchmark-memory
+benchmark-memory:
+	pytest badchess/benchmark/memory --memray \
+		--stacks 1 > badchess/benchmark/memory/result.txt
