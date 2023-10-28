@@ -13,76 +13,76 @@ badchess/benchmark/memory/test_memory.py::test_find_best_move_depth_3
 -------------------------------- live log call ---------------------------------
 INFO     root:main.py:211 best_moves (d: 1, s: 0) ['g1h3', 'g1f3', 'b1c3', 'b1a3', 'h2h3', 'g2g3', 'f2f3', 'e2e3', 'd2d3', 'c2c3', 'b2b3', 'a2a3', 'h2h4', 'g2g4', 'f2f4', 'e2e4', 'd2d4', 'c2c4', 'b2b4', 'a2a4']
 INFO     root:main.py:211 best_moves (d: 2, s: 0) ['g8h6', 'g8f6', 'b8c6', 'b8a6', 'h7h6', 'g7g6', 'f7f6', 'e7e6', 'd7d6', 'c7c6', 'b7b6', 'a7a6', 'h7h5', 'g7g5', 'f7f5', 'e7e5', 'd7d5', 'c7c5', 'b7b5', 'a7a5']
-INFO     root:main.py:211 best_moves (d: 3, s: 0) ['g1h3', 'g1f3', 'g1e2', 'f1a6', 'f1b5', 'f1c4', 'f1d3', 'f1e2', 'e1e2', 'd1h5', 'd1g4', 'd1f3', 'd1e2', 'b1c3', 'b1a3', 'e3e4', 'h2h3', 'g2g3', 'f2f3', 'd2d3', 'c2c3', 'b2b3', 'a2a3', 'h2h4', 'g2g4', 'f2f4', 'd2d4', 'c2c4', 'b2b4', 'a2a4']
-INFO     root:main.py:156 moves_list: ['e2e3', 'f7f6', 'e1e2']
+INFO     root:main.py:211 best_moves (d: 3, s: 0) ['h1h2', 'g1f3', 'b1c3', 'b1a3', 'h3h4', 'g2g3', 'f2f3', 'e2e3', 'd2d3', 'c2c3', 'b2b3', 'a2a3', 'g2g4', 'f2f4', 'e2e4', 'd2d4', 'c2c4', 'b2b4', 'a2a4']
+INFO     root:main.py:156 moves_list: ['h2h3', 'a7a6', 'c2c4']
 PASSED                                                                   [ 80%]
 badchess/benchmark/memory/test_memory.py::test_find_best_move_depth_4 
 -------------------------------- live log call ---------------------------------
 INFO     root:main.py:211 best_moves (d: 1, s: 0) ['g1h3', 'g1f3', 'b1c3', 'b1a3', 'h2h3', 'g2g3', 'f2f3', 'e2e3', 'd2d3', 'c2c3', 'b2b3', 'a2a3', 'h2h4', 'g2g4', 'f2f4', 'e2e4', 'd2d4', 'c2c4', 'b2b4', 'a2a4']
 INFO     root:main.py:211 best_moves (d: 2, s: 0) ['g8h6', 'g8f6', 'b8c6', 'b8a6', 'h7h6', 'g7g6', 'f7f6', 'e7e6', 'd7d6', 'c7c6', 'b7b6', 'a7a6', 'h7h5', 'g7g5', 'f7f5', 'e7e5', 'd7d5', 'c7c5', 'b7b5', 'a7a5']
-INFO     root:main.py:211 best_moves (d: 3, s: 0) ['g1h3', 'g1f3', 'c1a3', 'c1b2', 'b1c3', 'b1a3', 'b4b5', 'h2h3', 'g2g3', 'f2f3', 'e2e3', 'd2d3', 'c2c3', 'a2a3', 'h2h4', 'g2g4', 'f2f4', 'e2e4', 'd2d4', 'c2c4', 'a2a4']
-INFO     root:main.py:211 best_moves (d: 4, s: 0) ['g8h6', 'g8f6', 'e8d7', 'd8d7', 'c8d7', 'c8e6', 'c8f5', 'c8g4', 'c8h3', 'b8d7', 'b8c6', 'b8a6', 'h7h6', 'g7g6', 'f7f6', 'e7e6', 'c7c6', 'b7b6', 'a7a6', 'd6d5', 'h7h5', 'g7g5', 'f7f5', 'e7e5', 'c7c5', 'b7b5', 'a7a5']
-INFO     root:main.py:156 moves_list: ['b2b4', 'd7d6', 'b1c3', 'g7g5']
+INFO     root:main.py:211 best_moves (d: 3, s: 1) ['e4d5']
+INFO     root:main.py:211 best_moves (d: 4, s: 0) ['d8d5']
+INFO     root:main.py:156 moves_list: ['e2e4', 'd7d5', 'e4d5', 'd8d5']
 PASSED                                                                   [100%]
 
 
 ================================ MEMRAY REPORT =================================
 Allocation results for badchess/benchmark/memory/test_memory.py::test_build_move_tree_depth_4 at the high watermark
 
-	 📦 Total memory allocated: 106.3MiB
-	 📏 Total allocations: 891
-	 📊 Histogram of allocation sizes: |    ▅ █ ▃|
+	 📦 Total memory allocated: 58.3MiB
+	 📏 Total allocations: 505
+	 📊 Histogram of allocation sizes: |    █ ▁ ▁|
 	 🥇 Biggest allocating functions:
-		- __init__:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:644 -> 33.2MiB
-		- clear_board:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:1668 -> 22.5MiB
-		- copy:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:3745 -> 20.5MiB
-		- __init__:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:3921 -> 11.2MiB
-		- push:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:2264 -> 3.8MiB
+		- clear_board:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:1668 -> 23.3MiB
+		- __init__:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:3921 -> 13.2MiB
+		- copy:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:3745 -> 12.8MiB
+		- add_child:/home/kevin/dev/badchess/badchess/tree.py:29 -> 2.5MiB
+		- push:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:2264 -> 2.2MiB
 
 
 Allocation results for badchess/benchmark/memory/test_memory.py::test_find_best_move_depth_4 at the high watermark
 
-	 📦 Total memory allocated: 103.5MiB
-	 📏 Total allocations: 870
-	 📊 Histogram of allocation sizes: |      █ ▁|
+	 📦 Total memory allocated: 56.3MiB
+	 📏 Total allocations: 486
+	 📊 Histogram of allocation sizes: |▂     █ ▁|
 	 🥇 Biggest allocating functions:
-		- __init__:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:644 -> 30.0MiB
-		- clear_board:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:1668 -> 24.5MiB
-		- copy:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:3745 -> 21.5MiB
-		- __init__:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:3921 -> 13.0MiB
-		- push:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:2264 -> 2.2MiB
+		- clear_board:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:1668 -> 20.2MiB
+		- __init__:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:3921 -> 13.5MiB
+		- copy:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:3745 -> 12.5MiB
+		- push:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:2264 -> 2.0MiB
+		- add_child:/home/kevin/dev/badchess/badchess/tree.py:29 -> 1.2MiB
 
 
 Allocation results for badchess/benchmark/memory/test_memory.py::test_build_move_tree_depth_3 at the high watermark
 
-	 📦 Total memory allocated: 4.5MiB
-	 📏 Total allocations: 56
-	 📊 Histogram of allocation sizes: |█ ▁   ▄ ▄|
+	 📦 Total memory allocated: 2.8MiB
+	 📏 Total allocations: 45
+	 📊 Histogram of allocation sizes: |█ ▁   ▄ ▂|
 	 🥇 Biggest allocating functions:
-		- <lambda>:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:321 -> 2.5MiB
-		- clear_board:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:1668 -> 768.0KiB
-		- __init__:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:644 -> 512.0KiB
-		- copy:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:3745 -> 256.0KiB
+		- <lambda>:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:321 -> 1.5MiB
+		- <lambda>:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:321 -> 518.0KiB
+		- clear_board:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:1668 -> 256.0KiB
 		- __init__:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:3921 -> 256.0KiB
+		- push:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:2264 -> 256.0KiB
 
 
 Allocation results for badchess/benchmark/memory/test_memory.py::test_build_move_tree_depth_2 at the high watermark
 
-	 📦 Total memory allocated: 262.4KiB
-	 📏 Total allocations: 12
-	 📊 Histogram of allocation sizes: |█ ▁      |
+	 📦 Total memory allocated: 6.4KiB
+	 📏 Total allocations: 11
+	 📊 Histogram of allocation sizes: |█   ▁   ▁|
 	 🥇 Biggest allocating functions:
-		- <lambda>:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:321 -> 256.0KiB
 		- is_pseudo_legal:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:1880 -> 2.1KiB
 		- generate_pseudo_legal_moves:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:1706 -> 1.1KiB
 		- push_uci:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:3165 -> 576.0B
 		- __init__:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:1448 -> 576.0B
+		- generate_pseudo_legal_moves:/home/kevin/.pyenv/versions/badchess/lib/python3.9/site-packages/chess/__init__.py:1718 -> 560.0B
 
 
 Allocation results for badchess/benchmark/memory/test_memory.py::test_find_best_move_depth_3 at the high watermark
 
 	 📦 Total memory allocated: 2.4KiB
-	 📏 Total allocations: 15
+	 📏 Total allocations: 14
 	 📊 Histogram of allocation sizes: |▂       █|
 	 🥇 Biggest allocating functions:
 		- info:/home/kevin/.pyenv/versions/3.9.14/lib/python3.9/logging/__init__.py:1446 -> 584.0B
@@ -92,4 +92,4 @@ Allocation results for badchess/benchmark/memory/test_memory.py::test_find_best_
 		- get_terminal_size:/home/kevin/.pyenv/versions/3.9.14/lib/python3.9/shutil.py:1375 -> 124.0B
 
 
-============================== 5 passed in 22.17s ==============================
+============================== 5 passed in 21.66s ==============================

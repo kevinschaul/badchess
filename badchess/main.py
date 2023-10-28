@@ -165,13 +165,13 @@ def get_tree_max(move_tree: Tree):
     # Find the minimum strength
     max_strength = -inf
     for i, move in enumerate(move_tree.children):
-        if move.data["strength"] >= max_strength:
-            max_strength = move.data["strength"]
+        if move.strength >= max_strength:
+            max_strength = move.strength
 
     # Then return all nodes that produce that minimum strength
     max_indices = []
     for i, move in enumerate(move_tree.children):
-        if move.data["strength"] == max_strength:
+        if move.strength == max_strength:
             max_indices.append(i)
     return (max_strength, max_indices)
 
@@ -186,13 +186,13 @@ def get_tree_min(move_tree: Tree):
     # Find the minimum strength
     min_strength = inf
     for i, move in enumerate(move_tree.children):
-        if move.data["strength"] <= min_strength:
-            min_strength = move.data["strength"]
+        if move.strength <= min_strength:
+            min_strength = move.strength
 
     # Then return all nodes that produce that minimum strength
     min_indices = []
     for i, move in enumerate(move_tree.children):
-        if move.data["strength"] == min_strength:
+        if move.strength == min_strength:
             min_indices.append(i)
     return (min_strength, min_indices)
 
@@ -248,7 +248,7 @@ def _build_move_tree(board: chess.Board, depth=1, _current_depth=1, _move="root"
             )
 
         # Calculate the strength for this move
-        move_node.data = {"strength": estimate_strength(new_board)}
+        move_node.strength = estimate_strength(new_board)
 
         # Add it to the tree
         tree.add_child(move_node)

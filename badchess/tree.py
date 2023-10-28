@@ -1,13 +1,13 @@
 class Tree:
-    def __init__(self, name="root", data=None, children=[]):
+    def __init__(self, name="root", strength=None, children=[]):
         self.name = name
-        self._data = data
+        self._strength = strength
         self.children = []
         for child in children:
             self.add_child(child)
 
     def __repr__(self):
-        return f"({self.name} with {len(self.children)} children), data: {self.data}"
+        return f"({self.name} with {len(self.children)} children), strength: {self._strength}"
 
     def display_tree(self):
         return self._display_tree()
@@ -34,10 +34,10 @@ class Tree:
                 return child
 
     @property
-    def data(self):
-        """The data property."""
-        return self._data
+    def strength(self):
+        """The strength property."""
+        return self._strength
 
-    @data.setter
-    def data(self, value):
-        self._data = value
+    @strength.setter
+    def strength(self, value):
+        self._strength = value
