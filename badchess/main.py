@@ -198,27 +198,72 @@ def get_tree_min(move_tree: Tree):
 
 
 def minimax(move_tree: Tree, is_cur_move_white: bool):
-    moves_list = []
-    cur_tree = move_tree
-    cur_depth = 1
+    """
+    Returns a list of moves that are estimated to be the best,
+    by maximizing strength for white and minimizing strength for
+    black (or the reverse, if `is_cur_move_white` is False).
+    """
+    return _minimax(move_tree, [], is_cur_move_white)[1]
 
-    while len(cur_tree.children):
+
+def _minimax(move_tree: Tree, moves_list: list[str], is_cur_move_white: bool, depth=0):
+    indent = '\t' * depth
+    # logging.debug(
+    #     f"{indent}_minimax depth: {depth}, moves_list: {moves_list}, is_cur_move_white: {is_cur_move_white}"
+    # )
+    moves_list = moves_list.copy()
+    cur_move_tree = move_tree
+    for move in moves_list:
+        cur_move_tree = cur_move_tree.get_child(move)
+        # logging.debug(f"{indent} cur_move_tree: {cur_move_tree}")
+        if not cur_move_tree:
+            raise KeyError
+
+    # Base case. We know the strength.
+    if not cur_move_tree.children:
+        # logging.debug(f"{indent} base case!")
+        # logging.debug(f"{indent} returning ({cur_move_tree.strength}, {moves_list})")
+        return (cur_move_tree.strength, moves_list)
+
+    else:
+        # logging.debug(f"{indent} else case!")
+        possible_moves = []
+        for move in cur_move_tree.children:
+            next_moves_list = moves_list.copy()
+            next_moves_list.append(move.name)
+            possible_moves.append(
+                _minimax(move_tree, next_moves_list, not is_cur_move_white, depth=depth + 1)
+            )
+            # logging.debug(f"{indent} possible_moves: {possible_moves}")
+
         if is_cur_move_white:
-            best_moves = get_tree_max(cur_tree)
+            # Find the max strength
+            # best_move = sorted(possible_moves, key=lambda x: x[0], reverse=True)[0]
+            best_move = random.choice(max_strength_moves(possible_moves))
+            # logging.info(f"{indent} white best_move: {best_move}")
         else:
-            best_moves = get_tree_min(cur_tree)
+            # Find the min strength
+            best_move = random.choice(min_strength_moves(possible_moves))
+            # logging.info(f"{indent} black best_move: {best_move}")
+        return best_move
 
-        logging.info(
-            f"best_moves (d: {cur_depth}, s: {best_moves[0]}) {[cur_tree.children[m].name for m in best_moves[1]]}"
-        )
-        move = random.choice(best_moves[1])
-        cur_tree = cur_tree.children[move]
-        moves_list.append(cur_tree.name)
 
-        is_cur_move_white = not is_cur_move_white
-        cur_depth += 1
+def max_strength_moves(moves):
+    """
+    Returns a list of moves with the maximum strength, including ties.
+    moves is a tuple containing the strength and move sequence.
+    """
+    moves_sorted = sorted(moves, key=lambda x: x[0], reverse=True)
+    return [move for move in moves_sorted if move[0] == moves_sorted[0][0]]
 
-    return moves_list
+
+def min_strength_moves(moves):
+    """
+    Returns a list of moves with the minimum strength, including ties.
+    moves is a tuple containing the strength and move sequence.
+    """
+    moves_sorted = sorted(moves, key=lambda x: x[0], reverse=False)
+    return [move for move in moves_sorted if move[0] == moves_sorted[0][0]]
 
 
 def build_move_tree(board: chess.Board, depth=1):

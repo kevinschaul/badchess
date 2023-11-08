@@ -41,3 +41,9 @@ class Tree:
     @strength.setter
     def strength(self, value):
         self._strength = value
+
+    def n_nodes(self):
+        if not self.children:
+            return 1
+        else:
+            return 1 + sum([child.n_nodes() for child in self.children])
