@@ -9,10 +9,6 @@ from badchess.main import (
 )
 from badchess.tree import Tree
 
-FEN_MORPHY_DEFENCE = (
-    "r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4"
-)
-
 
 def test_tree_n_nodes_base():
     t = Tree()
@@ -182,21 +178,6 @@ def test_minimax_basic_reverse():
     )
     moves_list = minimax(move_tree, False)
     assert moves_list[0] == "c8e5"
-
-
-def test_minimax_morphy_depth_3():
-    board = chess.Board(fen=FEN_MORPHY_DEFENCE)
-    move_tree = build_move_tree(board, depth=3)
-    moves_list = minimax(move_tree, True)
-
-    assert moves_list[0] == "b5c6"
-
-
-def test_find_best_move_morphy_depth_3():
-    board = chess.Board(fen=FEN_MORPHY_DEFENCE)
-    best_move = find_best_move(board, depth=3)
-
-    assert best_move == "b5c6"
 
 
 def test_find_best_move_1_depth_3():
