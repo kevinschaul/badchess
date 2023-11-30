@@ -1,8 +1,11 @@
+from typing import Optional
+
+
 class Tree:
-    def __init__(self, name="root", strength=None, children=[]):
+    def __init__(self, name="root", strength=0, children=[]):
         self.name = name
         self._strength = strength
-        self.children = []
+        self.children: list["Tree"] = []
         for child in children:
             self.add_child(child)
 
@@ -25,24 +28,24 @@ class Tree:
                 ]
             )
 
-    def add_child(self, node):
+    def add_child(self, node: "Tree"):
         self.children.append(node)
 
-    def get_child(self, name):
+    def get_child(self, name) -> Optional["Tree"]:
         for child in self.children:
             if child.name == name:
                 return child
 
     @property
-    def strength(self):
+    def strength(self) -> float:
         """The strength property."""
         return self._strength
 
     @strength.setter
-    def strength(self, value):
+    def strength(self, value: float):
         self._strength = value
 
-    def n_nodes(self):
+    def n_nodes(self) -> int:
         if not self.children:
             return 1
         else:

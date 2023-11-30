@@ -3,16 +3,21 @@
 from concurrent.futures import ThreadPoolExecutor
 import fcntl
 import logging
-from math import inf
 import os
 import random
 import select
 import sys
 import queue
+from typing import Tuple
 
 import chess
 
 from badchess.tree import Tree
+
+# Custom types
+Move = str
+Moves = list[Move]
+StrengthAndMoves = Tuple[float, Moves]
 
 logging.basicConfig(
     filename="badchess.log",
@@ -26,7 +31,7 @@ should_exit = False
 MAX_DEPTH = 4
 
 
-def producer(q):
+def producer(q: queue.Queue):
     """
     Read a line from stdin, in a non-blocking way -- waiting at most
     1 second per call. Put any input lines into the queue.
@@ -37,7 +42,7 @@ def producer(q):
         logging.debug(f"Producer: {line}")
 
 
-def readlines_with_timeout(timeout):
+def readlines_with_timeout(timeout: int) -> list[str]:
     """
     Return an array of lines from stdin, waiting at most `timeout` seconds.
     Note that stdin has been set to non-blocking mode in main().
@@ -58,7 +63,7 @@ def readlines_with_timeout(timeout):
         return []
 
 
-def consumer(q, board, i):
+def consumer(q: queue.Queue, board: chess.Board, i: int):
     while not should_exit:
         try:
             line = q.get(timeout=1)
@@ -69,53 +74,53 @@ def consumer(q, board, i):
     logging.debug(f"Consumer {i} done")
 
 
-def send_command(command):
+def send_command(command: str):
     logging.debug(f"Command sent: {command}")
     sys.stdout.write(f"{command}\n")
     sys.stdout.flush()
 
 
-def process_command(command, board):
+def process_command(command: str, board: chess.Board):
     logging.debug(f"Command received: {command}")
     words = command.strip().split(" ")
 
     if words[0] == "uci":
-        process_uci(words, board)
+        process_uci()
     elif words[0] == "setoption":
-        process_setoption(words, board)
+        process_setoption()
     elif words[0] == "isready":
-        process_isready(words, board)
+        process_isready()
     elif words[0] == "ucinewgame":
-        process_ucinewgame(words, board)
+        process_ucinewgame(board)
     elif words[0] == "position":
         process_position(words, board)
     elif words[0] == "go":
-        process_go(words, board)
+        process_go(board)
     elif words[0] == "stop":
-        process_stop(words, board)
+        process_stop()
     elif words[0] == "quit":
-        process_quit(words, board)
+        process_quit()
 
 
-def process_setoption(words, board):
+def process_setoption():
     logging.warning("setoption ignored")
 
 
-def process_uci(words, board):
+def process_uci():
     send_command("id name badchess")
     send_command("id author Kevin Schaul")
     send_command("uciok")
 
 
-def process_isready(words, board):
+def process_isready():
     send_command("readyok")
 
 
-def process_ucinewgame(words, board):
+def process_ucinewgame(board: chess.Board):
     board.reset()
 
 
-def process_position(words, board):
+def process_position(words: list[str], board: chess.Board):
     """
     position [fen <fenstring> | startpos ]  moves <move1> .... <movei>
 
@@ -132,23 +137,23 @@ def process_position(words, board):
             [board.push_uci(move) for move in words[9:]]
 
 
-def process_go(words, board):
+def process_go(board: chess.Board):
     move = find_best_move(board, depth=3)
     send_command(f"bestmove {move}")
 
 
-def process_stop(words, board):
+def process_stop():
     # TODO stop other consumer threads
     pass
 
 
-def process_quit(words, board):
+def process_quit():
     global should_exit
     should_exit = True
     logging.debug(f"exit set")
 
 
-def find_best_move(board, depth=3) -> chess.Move:
+def find_best_move(board: chess.Board, depth=3) -> Move:
     # Build out a move tree
     move_tree = build_move_tree(board, depth=depth)
 
@@ -157,47 +162,7 @@ def find_best_move(board, depth=3) -> chess.Move:
     return moves_list[0]
 
 
-def get_tree_max(move_tree: Tree):
-    """
-    Finds the child node with the maximum strength. Returns a tuple with its
-    strength an a list of node indices at that strength.
-    """
-    # Find the minimum strength
-    max_strength = -inf
-    for i, move in enumerate(move_tree.children):
-        if move.strength >= max_strength:
-            max_strength = move.strength
-
-    # Then return all nodes that produce that minimum strength
-    max_indices = []
-    for i, move in enumerate(move_tree.children):
-        if move.strength == max_strength:
-            max_indices.append(i)
-    return (max_strength, max_indices)
-
-
-def get_tree_min(move_tree: Tree):
-    """
-    Finds the child node with the minimum strength. Returns a tuple with its
-    strength an a list of node indices at that strength.
-
-    Finds the child node with the minimum strength, and returns its strength and its index
-    """
-    # Find the minimum strength
-    min_strength = inf
-    for i, move in enumerate(move_tree.children):
-        if move.strength <= min_strength:
-            min_strength = move.strength
-
-    # Then return all nodes that produce that minimum strength
-    min_indices = []
-    for i, move in enumerate(move_tree.children):
-        if move.strength == min_strength:
-            min_indices.append(i)
-    return (min_strength, min_indices)
-
-
-def minimax(move_tree: Tree, is_cur_move_white: bool):
+def minimax(move_tree: Tree, is_cur_move_white: bool) -> Moves:
     """
     Returns a list of moves that are estimated to be the best,
     by maximizing strength for white and minimizing strength for
@@ -206,49 +171,39 @@ def minimax(move_tree: Tree, is_cur_move_white: bool):
     return _minimax(move_tree, [], is_cur_move_white)[1]
 
 
-def _minimax(move_tree: Tree, moves_list: list[str], is_cur_move_white: bool, depth=0):
-    indent = '\t' * depth
-    # logging.debug(
-    #     f"{indent}_minimax depth: {depth}, moves_list: {moves_list}, is_cur_move_white: {is_cur_move_white}"
-    # )
+def _minimax(
+    move_tree: Tree, moves_list: Moves, is_cur_move_white: bool
+) -> StrengthAndMoves:
     moves_list = moves_list.copy()
     cur_move_tree = move_tree
     for move in moves_list:
         cur_move_tree = cur_move_tree.get_child(move)
-        # logging.debug(f"{indent} cur_move_tree: {cur_move_tree}")
         if not cur_move_tree:
             raise KeyError
 
     # Base case. We know the strength.
     if not cur_move_tree.children:
-        # logging.debug(f"{indent} base case!")
-        # logging.debug(f"{indent} returning ({cur_move_tree.strength}, {moves_list})")
         return (cur_move_tree.strength, moves_list)
 
     else:
-        # logging.debug(f"{indent} else case!")
         possible_moves = []
         for move in cur_move_tree.children:
             next_moves_list = moves_list.copy()
             next_moves_list.append(move.name)
             possible_moves.append(
-                _minimax(move_tree, next_moves_list, not is_cur_move_white, depth=depth + 1)
+                _minimax(move_tree, next_moves_list, not is_cur_move_white)
             )
-            # logging.debug(f"{indent} possible_moves: {possible_moves}")
 
         if is_cur_move_white:
             # Find the max strength
-            # best_move = sorted(possible_moves, key=lambda x: x[0], reverse=True)[0]
             best_move = random.choice(max_strength_moves(possible_moves))
-            # logging.info(f"{indent} white best_move: {best_move}")
         else:
             # Find the min strength
             best_move = random.choice(min_strength_moves(possible_moves))
-            # logging.info(f"{indent} black best_move: {best_move}")
         return best_move
 
 
-def max_strength_moves(moves):
+def max_strength_moves(moves: list[StrengthAndMoves]):
     """
     Returns a list of moves with the maximum strength, including ties.
     moves is a tuple containing the strength and move sequence.
@@ -257,7 +212,7 @@ def max_strength_moves(moves):
     return [move for move in moves_sorted if move[0] == moves_sorted[0][0]]
 
 
-def min_strength_moves(moves):
+def min_strength_moves(moves: list[StrengthAndMoves]):
     """
     Returns a list of moves with the minimum strength, including ties.
     moves is a tuple containing the strength and move sequence.
@@ -266,13 +221,15 @@ def min_strength_moves(moves):
     return [move for move in moves_sorted if move[0] == moves_sorted[0][0]]
 
 
-def build_move_tree(board: chess.Board, depth=1):
+def build_move_tree(board: chess.Board, depth=1) -> Tree:
     if depth > MAX_DEPTH:
         raise ValueError(f"Depth > {MAX_DEPTH} is asking for trouble")
     return _build_move_tree(board, depth=depth)
 
 
-def _build_move_tree(board: chess.Board, depth=1, _current_depth=1, _move="root"):
+def _build_move_tree(
+    board: chess.Board, depth=1, _current_depth=1, _move="root"
+) -> Tree:
     tree = Tree(name=_move)
 
     for move in board.legal_moves:
@@ -301,7 +258,7 @@ def _build_move_tree(board: chess.Board, depth=1, _current_depth=1, _move="root"
     return tree
 
 
-def estimate_strength(board: chess.Board):
+def estimate_strength(board: chess.Board) -> float:
     """
     Estimate the strength of the board, from white's position.
     """

@@ -3,11 +3,11 @@ from badchess.main import (
     build_move_tree,
     estimate_strength,
     find_best_move,
-    get_tree_max,
-    get_tree_min,
     minimax,
 )
 from badchess.tree import Tree
+
+# TODO: add tests for max_strength_moves, min_strength_moves
 
 
 def test_tree_n_nodes_base():
@@ -46,114 +46,6 @@ def test_build_move_tree_initial_depth_2():
     e2e4 = move_tree.get_child("e2e4")
     assert e2e4
     assert len(e2e4.children) == 20
-
-
-# def test_build_move_tree_initial_depth_4():
-#     board = chess.Board()
-#     move_tree = build_move_tree(board, depth=4)
-#
-#     depth = 0
-#     move = move_tree
-#     while len(move.children) >= 1:
-#         move = move.children.pop()
-#         depth += 1
-#     assert depth == 4
-
-
-def test_get_tree_max_basic_1():
-    move_tree = Tree(
-        "root",
-        children=(
-            Tree("c8d7", strength=0),
-            Tree("c8e5", strength=0),
-            Tree("c8h3", strength=3),
-        ),
-    )
-    assert get_tree_max(move_tree) == (3, [2])
-
-
-def test_get_tree_max_basic_2():
-    move_tree = Tree(
-        "root",
-        children=(
-            Tree("c8d7", strength=3),
-            Tree("c8e5", strength=0),
-            Tree("c8h3", strength=0),
-        ),
-    )
-    assert get_tree_max(move_tree) == (3, [0])
-
-
-def test_get_tree_max_ties_last():
-    move_tree = Tree(
-        "root",
-        children=(
-            Tree("c8d7", strength=0),
-            Tree("c8e5", strength=3),
-            Tree("c8h3", strength=3),
-        ),
-    )
-    assert get_tree_max(move_tree) == (3, [1, 2])
-
-
-def test_get_tree_max_ties_first():
-    move_tree = Tree(
-        "root",
-        children=(
-            Tree("c8d7", strength=3),
-            Tree("c8e5", strength=3),
-            Tree("c8h3", strength=0),
-        ),
-    )
-    assert get_tree_max(move_tree) == (3, [0, 1])
-
-
-def test_get_tree_min_basic_1():
-    move_tree = Tree(
-        "root",
-        children=(
-            Tree("c8d7", strength=0),
-            Tree("c8e5", strength=3),
-            Tree("c8h3", strength=3),
-        ),
-    )
-    assert get_tree_min(move_tree) == (0, [0])
-
-
-def test_get_tree_min_basic_2():
-    move_tree = Tree(
-        "root",
-        children=(
-            Tree("c8d7", strength=3),
-            Tree("c8e5", strength=3),
-            Tree("c8h3", strength=0),
-        ),
-    )
-    assert get_tree_min(move_tree) == (0, [2])
-
-
-def test_get_tree_min_ties_first():
-    move_tree = Tree(
-        "root",
-        children=(
-            Tree("c8d7", strength=0),
-            Tree("c8e5", strength=0),
-            Tree("c8h3", strength=3),
-        ),
-    )
-    assert get_tree_min(move_tree) == (0, [0, 1])
-
-
-def test_get_tree_min_ties_last():
-    move_tree = Tree(
-        "root",
-        children=(
-            Tree("c8d7", strength=3),
-            Tree("c8e5", strength=0),
-            Tree("c8h3", strength=0),
-        ),
-    )
-    assert get_tree_min(move_tree) == (0, [1, 2])
 
 
 def test_minimax_basic():
