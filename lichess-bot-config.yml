@@ -41,7 +41,7 @@ engine:                            # Engine settings.
     max_retries: 2                 # The maximum amount of retries when getting an online move.
     # max_depth: 10                # How many moves from the start to take from online books. Default is no limit.
     chessdb_book:
-      enabled: true               # Whether or not to use chessdb book.
+      enabled: true                # Whether or not to use chessdb book.
       min_time: 20                 # Minimum time (in seconds) to use chessdb book.
       move_quality: "good"         # One of "all", "good", "best".
       min_depth: 20                # Only for move_quality: "best".
@@ -132,7 +132,7 @@ challenge:                         # Incoming challenges.
   min_increment: 0                 # Minimum amount of increment to accept a challenge in seconds.
   max_base: 1800                   # Maximum amount of base time to accept a challenge in seconds. The max is 10800 (3 hours).
   min_base: 0                      # Minimum amount of base time to accept a challenge in seconds.
-  max_days: 14                     # Maximum number of days per move to accept a challenge for a correspondence game.
+  max_days: ".inf"                 # Maximum number of days per move to accept a challenge for a correspondence game.
                                    # Unlimited games can be accepted by removing this field or specifying .inf
   min_days: 1                      # Minimum number of days per move to accept a challenge for a correspondence game.
   variants:                        # Chess variants to accept (https://lichess.org/variant).
@@ -154,15 +154,15 @@ challenge:                         # Incoming challenges.
     - correspondence
   modes:                           # Game modes to accept.
     - casual                       # Unrated games.
-      # - rated                        # Rated games - must comment if the engine doesn't try to win.
+    - rated                        # Rated games - must comment if the engine doesn't try to win.
 # block_list:                      # List of users from which the challenges are always declined.
 #   - user1
 #   - user2
 allow_list:                      # List of users from which challenges are exclusively accepted, all others being declined. If empty, challenges from all users may be accepted.
 #   - user3
 #   - user4
-# recent_bot_challenge_age: 60     # Maximum age of a bot challenge to be considered recent in seconds
-# max_recent_bot_challenges: 2     # Maximum number of recent challenges that can be accepted from the same bot
+recent_bot_challenge_age: 60     # Maximum age of a bot challenge to be considered recent in seconds
+max_recent_bot_challenges: 2     # Maximum number of recent challenges that can be accepted from the same bot
 #  bullet_requires_increment: False # Require that bullet game challenges from bots have a non-zero increment
 
 greeting:
@@ -182,7 +182,7 @@ greeting:
                                    # "all" - every game is written to a single file named "{Bot name} games.pgn"
 
 matchmaking:
-  allow_matchmaking: false         # Set it to 'true' to challenge other bots.
+  allow_matchmaking: true         # Set it to 'true' to challenge other bots.
   challenge_variant: "random"      # If set to 'random', the bot will choose one variant from the variants enabled in 'challenge.variants'.
   challenge_timeout: 30            # Create a challenge after being idle for 'challenge_timeout' minutes. The minimum is 1 minute.
   challenge_initial_time:          # Initial time in seconds of the challenge (to be chosen at random).
