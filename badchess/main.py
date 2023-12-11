@@ -3,6 +3,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import fcntl
 import logging
+from math import inf
 import os
 import random
 import select
@@ -262,6 +263,13 @@ def estimate_strength(board: chess.Board) -> float:
     """
     Estimate the strength of the board, from white's position.
     """
+    if board.is_checkmate():
+        outcome = board.outcome()
+        if outcome and outcome.winner == chess.WHITE:
+            return inf
+        elif outcome and outcome.winner == chess.BLACK:
+            return -inf
+
     values = {
         chess.KING: 100,
         chess.QUEEN: 9,

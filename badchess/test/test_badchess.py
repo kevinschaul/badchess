@@ -1,3 +1,4 @@
+from math import inf
 import chess
 from badchess.main import (
     build_move_tree,
@@ -29,6 +30,16 @@ def test_tree_n_nodes_depth_2():
 def test_estimate_strength_initial():
     board = chess.Board()
     assert estimate_strength(board) == 0
+
+
+def test_estimate_strength_mate_white():
+    board = chess.Board(fen="8/8/2k5/Q2Q4/8/8/8/4K3 b - - 9 5")
+    assert estimate_strength(board) == inf
+
+
+def test_estimate_strength_mate_black():
+    board = chess.Board(fen="8/8/2K5/q2q4/8/8/8/4k3 w - - 9 5")
+    assert estimate_strength(board) == -inf
 
 
 def test_build_move_tree_initial_depth_1():
@@ -88,3 +99,14 @@ def test_find_best_move_2_depth_3():
     best_move = find_best_move(board, depth=3)
 
     assert best_move != "a5a4"
+
+
+def test_staircase_mate():
+    board = chess.Board(fen="8/3k4/1Q6/Q7/8/8/8/4K3 w - - 6 4")
+    move_tree = build_move_tree(board, depth=3)
+    moves_list = minimax(move_tree, board.turn == chess.WHITE)
+    for move in moves_list:
+        board.push_uci(move)
+
+    # There are many ways to mate this position in three
+    assert board.is_checkmate()
