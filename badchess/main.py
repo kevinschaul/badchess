@@ -5,15 +5,12 @@ import fcntl
 import logging
 from math import inf
 import os
-import random
 import select
 import sys
 import queue
 from typing import Tuple
 
 import chess
-
-from badchess.tree import Tree
 
 # Custom types
 Move = str
@@ -154,109 +151,72 @@ def process_quit():
     logging.debug(f"exit set")
 
 
-def find_best_move(board: chess.Board, depth=3) -> Move:
-    # Build out a move tree
-    move_tree = build_move_tree(board, depth=depth)
-
-    moves_list = minimax(move_tree, board.turn == chess.WHITE)
-    logging.info(f"moves_list: {moves_list}")
-    return moves_list[0]
+def find_best_move(board: chess.Board, depth=3):
+    return alpha_beta_search(board, depth)
 
 
-def minimax(move_tree: Tree, is_cur_move_white: bool) -> Moves:
-    """
-    Returns a list of moves that are estimated to be the best,
-    by maximizing strength for white and minimizing strength for
-    black (or the reverse, if `is_cur_move_white` is False).
-    """
-    return _minimax(move_tree, [], is_cur_move_white)[1]
+n_positions_searched = 0
 
 
-def _minimax(
-    move_tree: Tree, moves_list: Moves, is_cur_move_white: bool
-) -> StrengthAndMoves:
-    moves_list = moves_list.copy()
-    cur_move_tree = move_tree
-    for move in moves_list:
-        cur_move_tree = cur_move_tree.get_child(move)
-        if not cur_move_tree:
-            raise KeyError
+def alpha_beta_search(board: chess.Board, depth=3):
+    global n_positions_searched
+    n_positions_searched = 0
 
-    # Base case. We know the strength.
-    if not cur_move_tree.children:
-        return (cur_move_tree.strength, moves_list)
+    func = max_value if board.turn == chess.WHITE else min_value
+    strength, move = func(board, -inf, inf, depth, 0)
+    logging.info(f"n_positions_searched: {n_positions_searched}")
+    logging.info(f"move: {move} strength: {strength}")
 
+    return move
+
+
+def max_value(board: chess.Board, alpha, beta, depth, _current_depth):
+    global n_positions_searched
+
+    if depth == _current_depth:
+        return (estimate_strength(board), None)
     else:
-        possible_moves = []
-        for move in cur_move_tree.children:
-            next_moves_list = moves_list.copy()
-            next_moves_list.append(move.name)
-            possible_moves.append(
-                _minimax(move_tree, next_moves_list, not is_cur_move_white)
+        strength = -inf
+        best_move = None
+        for move in board.legal_moves:
+            n_positions_searched += 1
+            move_uci = move.uci()
+            new_board = board.copy(stack=False)
+            new_board.push_uci(move_uci)
+            new_strength, a2 = min_value(
+                new_board, alpha, beta, depth, _current_depth + 1
             )
+            if new_strength > strength:
+                strength = new_strength
+                best_move = move_uci
+                alpha = max(alpha, strength)
+            if strength >= beta:
+                return (strength, best_move)
 
-        if is_cur_move_white:
-            # Find the max strength
-            best_move = random.choice(max_strength_moves(possible_moves))
-        else:
-            # Find the min strength
-            best_move = random.choice(min_strength_moves(possible_moves))
-        return best_move
-
-
-def max_strength_moves(moves: list[StrengthAndMoves]):
-    """
-    Returns a list of moves with the maximum strength, including ties.
-    moves is a tuple containing the strength and move sequence.
-    """
-    moves_sorted = sorted(moves, key=lambda x: x[0], reverse=True)
-    return [move for move in moves_sorted if move[0] == moves_sorted[0][0]]
+        return (strength, best_move)
 
 
-def min_strength_moves(moves: list[StrengthAndMoves]):
-    """
-    Returns a list of moves with the minimum strength, including ties.
-    moves is a tuple containing the strength and move sequence.
-    """
-    moves_sorted = sorted(moves, key=lambda x: x[0], reverse=False)
-    return [move for move in moves_sorted if move[0] == moves_sorted[0][0]]
-
-
-def build_move_tree(board: chess.Board, depth=1) -> Tree:
-    if depth > MAX_DEPTH:
-        raise ValueError(f"Depth > {MAX_DEPTH} is asking for trouble")
-    return _build_move_tree(board, depth=depth)
-
-
-def _build_move_tree(
-    board: chess.Board, depth=1, _current_depth=1, _move="root"
-) -> Tree:
-    tree = Tree(name=_move)
-
-    for move in board.legal_moves:
-        move_uci = move.uci()
-        new_board = board.copy(stack=False)
-        new_board.push_uci(move_uci)
-
-        if _current_depth == depth:
-            # If we are at max depth, this move node is a leaf
-            move_node = Tree(name=move_uci)
-        else:
-            # Otherwise let's build a subtree with this move
-            move_node = _build_move_tree(
-                new_board.copy(stack=False),
-                depth=depth,
-                _current_depth=_current_depth + 1,
-                _move=move_uci,
+def min_value(board: chess.Board, alpha, beta, depth, _current_depth):
+    if depth == _current_depth:
+        return (estimate_strength(board), None)
+    else:
+        strength = inf
+        best_move = None
+        for move in board.legal_moves:
+            move_uci = move.uci()
+            new_board = board.copy(stack=False)
+            new_board.push_uci(move_uci)
+            new_strength, a2 = max_value(
+                new_board, alpha, beta, depth, _current_depth + 1
             )
+            if new_strength < strength:
+                strength = new_strength
+                best_move = move_uci
+                beta = min(beta, strength)
+            if strength <= alpha:
+                return (strength, best_move)
 
-        # Calculate the strength for this move
-        move_node.strength = estimate_strength(new_board)
-
-        # Add it to the tree
-        tree.add_child(move_node)
-
-    return tree
+        return (strength, best_move)
 
 
 def estimate_strength(board: chess.Board) -> float:
