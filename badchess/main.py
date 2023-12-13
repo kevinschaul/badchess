@@ -170,6 +170,16 @@ def alpha_beta_search(board: chess.Board, depth=3):
     return move
 
 
+def order_moves(board):
+    return sorted(board.legal_moves, key=lambda move: _order_move(board, move))
+
+
+def _order_move(board, move):
+    if board.piece_at(move.to_square):
+        return -1
+    return 0
+
+
 def max_value(board: chess.Board, alpha, beta, depth, _current_depth):
     global n_positions_searched
 
@@ -178,7 +188,7 @@ def max_value(board: chess.Board, alpha, beta, depth, _current_depth):
     else:
         strength = -inf
         best_move = None
-        for move in board.legal_moves:
+        for move in order_moves(board):
             n_positions_searched += 1
             move_uci = move.uci()
             new_board = board.copy(stack=False)
@@ -202,7 +212,7 @@ def min_value(board: chess.Board, alpha, beta, depth, _current_depth):
     else:
         strength = inf
         best_move = None
-        for move in board.legal_moves:
+        for move in order_moves(board):
             move_uci = move.uci()
             new_board = board.copy(stack=False)
             new_board.push_uci(move_uci)
