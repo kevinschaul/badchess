@@ -2,6 +2,7 @@ from math import inf
 import chess
 from badchess.main import (
     estimate_strength,
+    estimate_strength_positioning,
     find_best_move,
 )
 
@@ -19,6 +20,11 @@ def test_estimate_strength_mate_white():
 def test_estimate_strength_mate_black():
     board = chess.Board(fen="8/8/2K5/q2q4/8/8/8/4k3 w - - 9 5")
     assert estimate_strength(board) == -inf
+
+
+def test_estimate_strength_positioning():
+    board = chess.Board()
+    assert estimate_strength_positioning(board) == 0
 
 
 def test_find_best_move_1_depth_3():

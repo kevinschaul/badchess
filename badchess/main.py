@@ -240,8 +240,14 @@ def estimate_strength(board: chess.Board) -> float:
         elif outcome and outcome.winner == chess.BLACK:
             return -inf
 
+    material = estimate_strength_material(board)
+    positioning = estimate_strength_positioning(board)
+
+    return material + positioning * 0.1
+
+
+def estimate_strength_material(board):
     values = {
-        chess.KING: 100,
         chess.QUEEN: 9,
         chess.ROOK: 5,
         chess.BISHOP: 3,
@@ -251,6 +257,55 @@ def estimate_strength(board: chess.Board) -> float:
     white = sum(v * len(board.pieces(k, chess.WHITE)) for k, v in values.items())
     black = sum(v * len(board.pieces(k, chess.BLACK)) for k, v in values.items())
     return white - black
+
+
+def estimate_strength_positioning(board):
+    # For each piece type, an 8x8 array representing our preference for
+    # where they are positioned on the board, from 0 to 1.
+    position_values = {
+        # fmt: off
+        chess.PAWN: (
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.2, 0.3, 0.3, 0.2, 0.0, 0.0,
+            0.4, 0.6, 0.8, 1.0, 1.0, 0.8, 0.6, 0.4,
+            0.4, 0.6, 0.8, 1.0, 1.0, 0.8, 0.6, 0.4,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.2, 0.3, 0.3, 0.2, 0.0, 0.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+        ),
+        chess.KNIGHT: (
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.2, 0.2, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.6, 1.0, 1.0, 0.6, 0.0, 0.0,
+            0.0, 0.2, 0.8, 1.0, 1.0, 0.8, 0.2, 0.0,
+            0.0, 0.2, 0.8, 1.0, 1.0, 0.8, 0.2, 0.0,
+            0.0, 0.0, 0.6, 1.0, 1.0, 0.6, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.2, 0.2, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        )
+        # fmt: on
+    }
+
+    sums = {chess.WHITE: 0.0, chess.BLACK: 0.0}
+    for color, _ in sums.items():
+        for piece_type, values in position_values.items():
+            pieces = board.pieces(piece_type, color)
+            if pieces:
+                pieces_list = pieces.tolist()
+                sums[color] += sum(
+                    [
+                        value
+                        for (value, piece_exists) in zip(values, pieces_list)
+                        if piece_exists
+                    ]
+                ) / len(pieces)
+
+    len_position_values = len(position_values)
+    return (
+        sums[chess.WHITE] / len_position_values
+        - sums[chess.BLACK] / len_position_values
+    )
 
 
 def main():
