@@ -163,9 +163,10 @@ def alpha_beta_search(board: chess.Board, depth=3):
     n_positions_searched = 0
 
     func = max_value if board.turn == chess.WHITE else min_value
-    strength, move = func(board, -inf, inf, depth, 0)
+    strength, move, moves = func(board, -inf, inf, depth, 0)
     logging.info(f"n_positions_searched: {n_positions_searched}")
     logging.info(f"move: {move} strength: {strength}")
+    logging.info(f"moves: {moves}")
 
     return move
 
@@ -184,49 +185,54 @@ def max_value(board: chess.Board, alpha, beta, depth, _current_depth):
     global n_positions_searched
 
     if depth == _current_depth:
-        return (estimate_strength(board), None)
+        return (estimate_strength(board), None, [])
     else:
         strength = -inf
         best_move = None
+        best_moves = []
         for move in order_moves(board):
             n_positions_searched += 1
             move_uci = move.uci()
             new_board = board.copy(stack=False)
             new_board.push_uci(move_uci)
-            new_strength, a2 = min_value(
+            new_strength, a2, moves = min_value(
                 new_board, alpha, beta, depth, _current_depth + 1
             )
             if new_strength > strength:
                 strength = new_strength
                 best_move = move_uci
+                best_moves = moves
                 alpha = max(alpha, strength)
             if strength >= beta:
-                return (strength, best_move)
+                return (strength, best_move, [best_move] + best_moves)
 
-        return (strength, best_move)
+        return (strength, best_move, [best_move] + best_moves)
 
 
 def min_value(board: chess.Board, alpha, beta, depth, _current_depth):
     if depth == _current_depth:
-        return (estimate_strength(board), None)
+        return (estimate_strength(board), None, [])
     else:
         strength = inf
         best_move = None
+        best_moves = []
         for move in order_moves(board):
             move_uci = move.uci()
             new_board = board.copy(stack=False)
             new_board.push_uci(move_uci)
-            new_strength, a2 = max_value(
+            new_strength, a2, moves = max_value(
                 new_board, alpha, beta, depth, _current_depth + 1
             )
             if new_strength < strength:
                 strength = new_strength
                 best_move = move_uci
+                best_moves = moves
                 beta = min(beta, strength)
             if strength <= alpha:
-                return (strength, best_move)
+                return (strength, best_move, [best_move] + best_moves)
 
-        return (strength, best_move)
+        # best_moves = [best_move] + best_moves
+        return (strength, best_move, [best_move] + best_moves)
 
 
 def estimate_strength(board: chess.Board) -> float:
