@@ -5,15 +5,12 @@ import fcntl
 import logging
 from math import inf
 import os
-import random
 import select
 import sys
 import queue
 from typing import Tuple
 
 import chess
-
-from badchess.tree import Tree
 
 # Custom types
 Move = str
@@ -154,109 +151,82 @@ def process_quit():
     logging.debug(f"exit set")
 
 
-def find_best_move(board: chess.Board, depth=3) -> Move:
-    # Build out a move tree
-    move_tree = build_move_tree(board, depth=depth)
-
-    moves_list = minimax(move_tree, board.turn == chess.WHITE)
-    logging.info(f"moves_list: {moves_list}")
-    return moves_list[0]
+def find_best_move(board: chess.Board, depth=3):
+    return alpha_beta_search(board, depth)
 
 
-def minimax(move_tree: Tree, is_cur_move_white: bool) -> Moves:
-    """
-    Returns a list of moves that are estimated to be the best,
-    by maximizing strength for white and minimizing strength for
-    black (or the reverse, if `is_cur_move_white` is False).
-    """
-    return _minimax(move_tree, [], is_cur_move_white)[1]
+n_positions_searched = 0
 
 
-def _minimax(
-    move_tree: Tree, moves_list: Moves, is_cur_move_white: bool
-) -> StrengthAndMoves:
-    moves_list = moves_list.copy()
-    cur_move_tree = move_tree
-    for move in moves_list:
-        cur_move_tree = cur_move_tree.get_child(move)
-        if not cur_move_tree:
-            raise KeyError
+def alpha_beta_search(board: chess.Board, depth=3):
+    global n_positions_searched
+    n_positions_searched = 0
 
-    # Base case. We know the strength.
-    if not cur_move_tree.children:
-        return (cur_move_tree.strength, moves_list)
+    func = max_value if board.turn == chess.WHITE else min_value
+    strength, moves = func(board, -inf, inf, depth, 0)
+    logging.info(f"n_positions_searched: {n_positions_searched}")
+    logging.info(f"moves: {moves} strength: {strength}")
 
+    return moves[0]
+
+
+def order_moves(board):
+    return sorted(board.legal_moves, key=lambda move: _order_move(board, move))
+
+
+def _order_move(board, move):
+    if board.piece_at(move.to_square):
+        return -1
+    return 0
+
+
+def max_value(board: chess.Board, alpha, beta, depth, _current_depth):
+    global n_positions_searched
+
+    if depth == _current_depth:
+        return (estimate_strength(board), [])
     else:
-        possible_moves = []
-        for move in cur_move_tree.children:
-            next_moves_list = moves_list.copy()
-            next_moves_list.append(move.name)
-            possible_moves.append(
-                _minimax(move_tree, next_moves_list, not is_cur_move_white)
+        strength = -inf
+        best_moves = []
+        for move in order_moves(board):
+            n_positions_searched += 1
+            move_uci = move.uci()
+            new_board = board.copy(stack=False)
+            new_board.push_uci(move_uci)
+            new_strength, moves = min_value(
+                new_board, alpha, beta, depth, _current_depth + 1
             )
+            if new_strength > strength:
+                strength = new_strength
+                best_moves = [move_uci] + moves
+                alpha = max(alpha, strength)
+            if strength >= beta:
+                return (strength, best_moves)
 
-        if is_cur_move_white:
-            # Find the max strength
-            best_move = random.choice(max_strength_moves(possible_moves))
-        else:
-            # Find the min strength
-            best_move = random.choice(min_strength_moves(possible_moves))
-        return best_move
-
-
-def max_strength_moves(moves: list[StrengthAndMoves]):
-    """
-    Returns a list of moves with the maximum strength, including ties.
-    moves is a tuple containing the strength and move sequence.
-    """
-    moves_sorted = sorted(moves, key=lambda x: x[0], reverse=True)
-    return [move for move in moves_sorted if move[0] == moves_sorted[0][0]]
+        return (strength, best_moves)
 
 
-def min_strength_moves(moves: list[StrengthAndMoves]):
-    """
-    Returns a list of moves with the minimum strength, including ties.
-    moves is a tuple containing the strength and move sequence.
-    """
-    moves_sorted = sorted(moves, key=lambda x: x[0], reverse=False)
-    return [move for move in moves_sorted if move[0] == moves_sorted[0][0]]
-
-
-def build_move_tree(board: chess.Board, depth=1) -> Tree:
-    if depth > MAX_DEPTH:
-        raise ValueError(f"Depth > {MAX_DEPTH} is asking for trouble")
-    return _build_move_tree(board, depth=depth)
-
-
-def _build_move_tree(
-    board: chess.Board, depth=1, _current_depth=1, _move="root"
-) -> Tree:
-    tree = Tree(name=_move)
-
-    for move in board.legal_moves:
-        move_uci = move.uci()
-        new_board = board.copy(stack=False)
-        new_board.push_uci(move_uci)
-
-        if _current_depth == depth:
-            # If we are at max depth, this move node is a leaf
-            move_node = Tree(name=move_uci)
-        else:
-            # Otherwise let's build a subtree with this move
-            move_node = _build_move_tree(
-                new_board.copy(stack=False),
-                depth=depth,
-                _current_depth=_current_depth + 1,
-                _move=move_uci,
+def min_value(board: chess.Board, alpha, beta, depth, _current_depth):
+    if depth == _current_depth:
+        return (estimate_strength(board), [])
+    else:
+        strength = inf
+        best_moves = []
+        for move in order_moves(board):
+            move_uci = move.uci()
+            new_board = board.copy(stack=False)
+            new_board.push_uci(move_uci)
+            new_strength, moves = max_value(
+                new_board, alpha, beta, depth, _current_depth + 1
             )
+            if new_strength < strength:
+                strength = new_strength
+                best_moves = [move_uci] + moves
+                beta = min(beta, strength)
+            if strength <= alpha:
+                return (strength, best_moves)
 
-        # Calculate the strength for this move
-        move_node.strength = estimate_strength(new_board)
-
-        # Add it to the tree
-        tree.add_child(move_node)
-
-    return tree
+        return (strength, best_moves)
 
 
 def estimate_strength(board: chess.Board) -> float:
@@ -270,8 +240,14 @@ def estimate_strength(board: chess.Board) -> float:
         elif outcome and outcome.winner == chess.BLACK:
             return -inf
 
+    material = estimate_strength_material(board)
+    positioning = estimate_strength_positioning(board)
+
+    return material + positioning * 0.1
+
+
+def estimate_strength_material(board):
     values = {
-        chess.KING: 100,
         chess.QUEEN: 9,
         chess.ROOK: 5,
         chess.BISHOP: 3,
@@ -281,6 +257,95 @@ def estimate_strength(board: chess.Board) -> float:
     white = sum(v * len(board.pieces(k, chess.WHITE)) for k, v in values.items())
     black = sum(v * len(board.pieces(k, chess.BLACK)) for k, v in values.items())
     return white - black
+
+
+def estimate_strength_positioning(board):
+    # For each piece type, an 8x8 array representing our preference for
+    # where they are positioned on the board, from 0 to 1.
+    position_values = {
+        # fmt: off
+        chess.PAWN: (
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.2, 0.3, 0.3, 0.2, 0.0, 0.0,
+            0.4, 0.6, 0.8, 1.0, 1.0, 0.8, 0.6, 0.4,
+            0.4, 0.6, 0.8, 1.0, 1.0, 0.8, 0.6, 0.4,
+            0.0, 0.0, 0.2, 0.3, 0.3, 0.2, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+        ),
+        chess.ROOK: (
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ),
+        chess.KNIGHT: (
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.2, 0.2, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.4, 1.0, 1.0, 0.4, 0.0, 0.0,
+            0.0, 0.2, 0.8, 1.0, 1.0, 0.8, 0.2, 0.0,
+            0.0, 0.2, 0.8, 1.0, 1.0, 0.8, 0.2, 0.0,
+            0.0, 0.0, 0.4, 1.0, 1.0, 0.4, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.2, 0.2, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ),
+        chess.BISHOP: (
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            1.0, 0.8, 0.6, 0.2, 0.2, 0.6, 0.8, 1.0,
+            0.8, 0.6, 0.4, 0.1, 0.1, 0.4, 0.6, 0.8,
+            0.6, 0.4, 0.1, 0.0, 0.0, 0.1, 0.4, 0.6,
+            0.6, 0.4, 0.1, 0.0, 0.0, 0.1, 0.4, 0.6,
+            0.8, 0.6, 0.4, 0.1, 0.1, 0.4, 0.6, 0.8,
+            1.0, 0.8, 0.6, 0.2, 0.2, 0.6, 0.8, 1.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ),
+        chess.QUEEN: (
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ),
+        chess.KING: (
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        ),
+        # fmt: on
+    }
+
+    sums = {chess.WHITE: 0.0, chess.BLACK: 0.0}
+    for color, _ in sums.items():
+        for piece_type, values in position_values.items():
+            pieces = board.pieces(piece_type, color)
+            if pieces:
+                pieces_list = pieces.tolist()
+                sums[color] += sum(
+                    [
+                        value
+                        for (value, piece_exists) in zip(values, pieces_list)
+                        if piece_exists
+                    ]
+                )
+
+    len_position_values = len(position_values)
+    return (
+        sums[chess.WHITE] / len_position_values
+        - sums[chess.BLACK] / len_position_values
+    )
 
 
 def main():

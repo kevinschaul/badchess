@@ -41,7 +41,7 @@ engine:                            # Engine settings.
     max_retries: 2                 # The maximum amount of retries when getting an online move.
     # max_depth: 10                # How many moves from the start to take from online books. Default is no limit.
     chessdb_book:
-      enabled: true                # Whether or not to use chessdb book.
+      enabled: false                # Whether or not to use chessdb book.
       min_time: 20                 # Minimum time (in seconds) to use chessdb book.
       move_quality: "good"         # One of "all", "good", "best".
       min_depth: 20                # Only for move_quality: "best".
@@ -124,7 +124,7 @@ correspondence:
   ponder: false                    # Ponder in correspondence games the bot is connected to.
 
 challenge:                         # Incoming challenges.
-  concurrency: 2                   # Number of games to play simultaneously.
+  concurrency: 1                   # Number of games to play simultaneously.
   sort_by: "best"                  # Possible values: "best" and "first".
   accept_bot: true                 # Accepts challenges coming from other bots.
   only_bot: false                  # Accept challenges by bots only.
